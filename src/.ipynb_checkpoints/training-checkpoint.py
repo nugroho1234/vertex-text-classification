@@ -3,6 +3,8 @@ from tqdm import tqdm
 from livelossplot import PlotLosses
 from livelossplot.outputs import MatplotlibPlot
 from helper import after_subplot
+from google.cloud import bigquery, storage
+import pickle
 
 def train_one_epoch(train_dataloader, model, optimizer, loss, mode='bert'):
     """

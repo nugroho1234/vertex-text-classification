@@ -1,10 +1,11 @@
 #bigquery
-from google.cloud import bigquery
+from google.cloud import bigquery, storage
 
 #standard libraries
 import re
 from typing import List
 import pandas as pd
+import pickle
 
 
 def read_data_from_bq(bq_uri: str) -> pd.DataFrame:
@@ -159,3 +160,39 @@ def after_subplot(ax, group_name, x_label):
 
     if group_name.lower() == "loss":
         ax.set_ylim([None, None])
+
+def save_to_gcs(project_id: str, bucket_name: str, blob_path: str, variable):
+    """
+    A function to save a variable to GCS
+    
+    INPUT
+    :project_id: string, project id for current project
+    :bucket_name: string, GCS bucket name
+    :blob_path: string, path to file that will be saved
+    :variable: the variable to be saved
+    """
+    client = storage.Client(project=project_id)
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+    blob_bytes = pickle.dumps(variable)
+    blob.upload_from_string(blob_bytes)
+    print(f'Variable uploaded to gs://{bucket_name}/{blob_path}')
+
+def load_from_gcs(project_id: str, bucket_name: str, blob_path: str):
+    """
+    A function to load pickle file from GCS
+    
+    INPUT
+    :project_id: string, project id for current project
+    :bucket_name: string, GCS bucket name
+    :blob_path: string, path to file that will be loaded
+    
+    OUTPUT
+    :loaded_var: loaded pickle file saved in a variable
+    """
+    client = storage.Client(project=project_id)
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+    pickle_bytes = blob.download_as_bytes()
+    loaded_var = pickle.loads(pickle_bytes)
+    return loaded_var
